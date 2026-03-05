@@ -1,37 +1,39 @@
 <x-layouts::app :title="$project->title">
-    <div class="mx-auto flex h-full w-full max-w-4xl flex-1 flex-col gap-6">
-        <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
-            <div class="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                    <h1 class="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{{ $project->title }}</h1>
-                    <a
-                        href="{{ $project->github_url }}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="mt-1 block text-xs text-neutral-500 underline underline-offset-4 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
-                    >
-                        {{ $project->github_url }}
-                    </a>
-                </div>
+    <div class="flex h-full w-full flex-1 flex-col gap-6">
+        <div class="mx-auto w-full max-w-4xl">
+            <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                        <h1 class="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{{ $project->title }}</h1>
+                        <a
+                            href="{{ $project->github_url }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="mt-1 block text-xs text-neutral-500 underline underline-offset-4 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                        >
+                            {{ $project->github_url }}
+                        </a>
+                    </div>
 
-                <div class="flex flex-wrap items-center gap-2">
-                    <flux:modal.trigger name="confirm-project-deletion">
-                        <flux:button variant="danger" class="h-8 px-2" x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-project-deletion')" aria-label="Delete project">
-                            <flux:icon.trash class="size-4" />
-                        </flux:button>
-                    </flux:modal.trigger>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <flux:modal.trigger name="confirm-project-deletion">
+                            <flux:button variant="danger" class="h-8 px-2" x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-project-deletion')" aria-label="Delete project">
+                                <flux:icon.trash class="size-4" />
+                            </flux:button>
+                        </flux:modal.trigger>
 
-                    <flux:modal.trigger name="edit-project-details">
-                        <flux:button variant="primary" class="h-8 px-3 text-xs" x-data="" x-on:click.prevent="$dispatch('open-modal', 'edit-project-details')">
-                            Edit
-                        </flux:button>
-                    </flux:modal.trigger>
+                        <flux:modal.trigger name="edit-project-details">
+                            <flux:button variant="primary" class="h-8 px-3 text-xs" x-data="" x-on:click.prevent="$dispatch('open-modal', 'edit-project-details')">
+                                Edit
+                            </flux:button>
+                        </flux:modal.trigger>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="rounded-xl border border-dashed border-neutral-300 bg-white p-10 text-sm text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400">
-            This section will be added later.
+        <div class="w-full">
+            <x-projects.repository-statistics :statistics="$repositoryStatistics" :project="$project" />
         </div>
     </div>
 

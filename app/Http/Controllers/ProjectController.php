@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProjectRequest;
 use App\Models\Project;
+use App\Services\GitHub\RepositoryStatistics;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Throwable;
 
 class ProjectController extends Controller
 {
@@ -14,8 +16,15 @@ class ProjectController extends Controller
     {
         abort_if($project->user_id !== $request->user()->id, 404);
 
+        try {
+            $repositoryStatistics = $project->repositoryStatistics();
+        } catch (Throwable) {
+            $repositoryStatistics = RepositoryStatistics::empty();
+        }
+
         return view('projects.show', [
             'project' => $project,
+            'repositoryStatistics' => $repositoryStatistics,
         ]);
     }
 

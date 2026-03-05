@@ -4,6 +4,19 @@ use App\Models\Project;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 
+function fakeGitHubStatisticsRequest(): void
+{
+    $github = \Mockery::mock();
+    $repoApi = \Mockery::mock();
+    $commitsApi = \Mockery::mock();
+
+    $github->shouldReceive('repo')->andReturn($repoApi);
+    $repoApi->shouldReceive('commits')->andReturn($commitsApi);
+    $commitsApi->shouldReceive('all')->andReturn([]);
+
+    app()->instance('github', $github);
+}
+
 test('authenticated users can add projects to their account', function () {
     $user = User::factory()->create();
 
@@ -93,6 +106,7 @@ test('sidebar only shows projects for the logged-in user', function () {
 
 test('user can view their own project page', function () {
     $user = User::factory()->create();
+    fakeGitHubStatisticsRequest();
 
     $project = Project::factory()->for($user)->create([
         'title' => 'Quality Checker',
@@ -104,6 +118,7 @@ test('user can view their own project page', function () {
     $response->assertOk();
     $response->assertSeeText('Quality Checker');
     $response->assertSee($project->github_url);
+    $response->assertSeeText('Refresh statistics');
 });
 
 test('user cannot view another users project page', function () {
@@ -160,6 +175,7 @@ test('user cannot update another users project', function () {
 
 test('edit project modal reopens when update validation fails', function () {
     $user = User::factory()->create();
+    fakeGitHubStatisticsRequest();
 
     $project = Project::factory()->for($user)->create([
         'title' => 'Quality Checker',
