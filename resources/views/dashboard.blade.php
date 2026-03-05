@@ -1,11 +1,5 @@
 <x-layouts::app :title="__('Dashboard')">
     <div class="mx-auto flex h-full w-full max-w-3xl flex-1 flex-col gap-6">
-        @if (session('status'))
-            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-950/30 dark:text-emerald-300">
-                {{ session('status') }}
-            </div>
-        @endif
-
         <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
             <h1 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Add a project</h1>
             <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
@@ -45,13 +39,11 @@
             <div class="mt-4 flex flex-col gap-3">
                 @forelse (auth()->user()->projects()->latest()->get() as $project)
                     <a
-                        href="{{ $project->github_url }}"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href="{{ route('projects.show', $project) }}"
                         class="flex items-center justify-between rounded-lg border border-neutral-200 px-4 py-3 text-sm transition hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:border-neutral-600 dark:hover:bg-neutral-800/60"
                     >
                         <span class="font-medium text-neutral-900 dark:text-neutral-100">{{ $project->title }}</span>
-                        <span class="text-neutral-500 dark:text-neutral-400">Open</span>
+                        <span class="text-neutral-500 dark:text-neutral-400">View</span>
                     </a>
                 @empty
                     <p class="text-sm text-neutral-500 dark:text-neutral-400">You have no projects yet.</p>

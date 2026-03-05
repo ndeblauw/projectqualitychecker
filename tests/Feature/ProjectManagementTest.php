@@ -87,6 +87,122 @@ test('sidebar only shows projects for the logged-in user', function () {
 
     $response->assertOk();
     $response->assertSeeText($userProject->title);
-    $response->assertSee($userProject->github_url);
+    $response->assertSee(route('projects.show', $userProject));
     $response->assertDontSeeText('Other Project');
+});
+
+test('user can view their own project page', function () {
+    $user = User::factory()->create();
+
+    $project = Project::factory()->for($user)->create([
+        'title' => 'Quality Checker',
+        'github_url' => 'https://github.com/laravel/framework',
+    ]);
+
+    $response = $this->actingAs($user)->get(route('projects.show', $project));
+
+    $response->assertOk();
+    $response->assertSeeText('Quality Checker');
+    $response->assertSee($project->github_url);
+});
+
+test('user cannot view another users project page', function () {
+    $owner = User::factory()->create();
+    $viewer = User::factory()->create();
+
+    $project = Project::factory()->for($owner)->create();
+
+    $this->actingAs($viewer)
+        ->get(route('projects.show', $project))
+        ->assertNotFound();
+});
+
+test('user can update their own project', function () {
+    $user = User::factory()->create();
+
+    $project = Project::factory()->for($user)->create([
+        'title' => 'Old Title',
+        'github_url' => 'https://github.com/laravel/framework',
+    ]);
+
+    Http::fake([
+        'https://api.github.com/repos/laravel/pint' => Http::response([
+            'private' => false,
+        ], 200),
+    ]);
+
+    $response = $this->actingAs($user)->patch(route('projects.update', $project), [
+        'title' => 'Updated Title',
+        'github_url' => 'github.com/laravel/pint',
+    ]);
+
+    $response->assertRedirect(route('projects.show', $project));
+
+    expect($project->fresh()?->title)->toBe('Updated Title');
+    expect($project->fresh()?->github_url)->toBe('https://github.com/laravel/pint');
+});
+
+test('user cannot update another users project', function () {
+    $owner = User::factory()->create();
+    $viewer = User::factory()->create();
+
+    $project = Project::factory()->for($owner)->create();
+
+    Http::fake();
+
+    $this->actingAs($viewer)
+        ->patch(route('projects.update', $project), [
+            'title' => 'Updated Title',
+            'github_url' => 'https://github.com/laravel/framework',
+        ])
+        ->assertNotFound();
+});
+
+test('edit project modal reopens when update validation fails', function () {
+    $user = User::factory()->create();
+
+    $project = Project::factory()->for($user)->create([
+        'title' => 'Quality Checker',
+        'github_url' => 'https://github.com/laravel/framework',
+    ]);
+
+    Http::fake([
+        'https://api.github.com/repos/acme/missing-repository' => Http::response([], 404),
+    ]);
+
+    $response = $this->actingAs($user)
+        ->from(route('projects.show', $project))
+        ->followingRedirects()
+        ->patch(route('projects.update', $project), [
+            'title' => 'Quality Checker Updated',
+            'github_url' => 'https://github.com/acme/missing-repository',
+        ]);
+
+    $response->assertOk();
+    $response->assertSee('data-test="open-edit-project-modal"', false);
+    $response->assertSeeText('The GitHub repository does not exist or is not publicly accessible.');
+});
+
+test('user can delete their own project', function () {
+    $user = User::factory()->create();
+
+    $project = Project::factory()->for($user)->create();
+
+    $response = $this->actingAs($user)->delete(route('projects.destroy', $project));
+
+    $response->assertRedirect(route('dashboard'));
+    expect(Project::query()->find($project->id))->toBeNull();
+});
+
+test('user cannot delete another users project', function () {
+    $owner = User::factory()->create();
+    $viewer = User::factory()->create();
+
+    $project = Project::factory()->for($owner)->create();
+
+    $this->actingAs($viewer)
+        ->delete(route('projects.destroy', $project))
+        ->assertNotFound();
+
+    expect(Project::query()->find($project->id))->not->toBeNull();
 });

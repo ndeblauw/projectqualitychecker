@@ -6,6 +6,18 @@
     <body class="min-h-screen bg-white dark:bg-zinc-800">
         @php($projects = auth()->user()->projects()->latest()->get())
 
+        @persist('toast')
+            <flux:toast />
+        @endpersist
+
+        @if (session('status') && ! $errors->isNotEmpty())
+            <div
+                x-data="{}"
+                x-init="$flux.toast({ text: @js((string) session('status')), variant: 'success' })"
+                class="hidden"
+            ></div>
+        @endif
+
         <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
@@ -21,7 +33,7 @@
 
                 <flux:sidebar.group :heading="__('Projects')" class="grid">
                     @forelse ($projects as $project)
-                        <flux:sidebar.item icon="folder-git-2" :href="$project->github_url" target="_blank">
+                        <flux:sidebar.item icon="folder-git-2" :href="route('projects.show', $project)" :current="request()->routeIs('projects.show') && (int) request()->route('project')?->id === $project->id" wire:navigate>
                             {{ $project->title }}
                         </flux:sidebar.item>
                     @empty
