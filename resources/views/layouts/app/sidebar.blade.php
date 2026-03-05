@@ -4,6 +4,8 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-white dark:bg-zinc-800">
+        @php($projects = auth()->user()->projects()->latest()->get())
+
         <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
@@ -15,6 +17,18 @@
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Projects')" class="grid">
+                    @forelse ($projects as $project)
+                        <flux:sidebar.item icon="folder-git-2" :href="$project->github_url" target="_blank">
+                            {{ $project->title }}
+                        </flux:sidebar.item>
+                    @empty
+                        <flux:sidebar.item icon="folder-git-2" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
+                            {{ __('Add your first project') }}
+                        </flux:sidebar.item>
+                    @endforelse
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

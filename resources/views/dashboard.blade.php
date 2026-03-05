@@ -1,18 +1,62 @@
 <x-layouts::app :title="__('Dashboard')">
-    <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
+    <div class="mx-auto flex h-full w-full max-w-3xl flex-1 flex-col gap-6">
+        @if (session('status'))
+            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-950/30 dark:text-emerald-300">
+                {{ session('status') }}
             </div>
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
-            </div>
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
-            </div>
+        @endif
+
+        <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
+            <h1 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Add a project</h1>
+            <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+                Save GitHub repositories to your account.
+            </p>
+
+            <form method="POST" action="{{ route('projects.store') }}" class="mt-6 flex flex-col gap-4">
+                @csrf
+
+                <flux:input
+                    name="title"
+                    :label="__('Project title')"
+                    :value="old('title')"
+                    type="text"
+                    required
+                    :placeholder="__('Quality Checker')"
+                />
+
+                <flux:input
+                    name="github_url"
+                    :label="__('GitHub URL')"
+                    :value="old('github_url')"
+                    type="url"
+                    required
+                    placeholder="https://github.com/owner/repository"
+                />
+
+                <div>
+                    <flux:button type="submit" variant="primary">Add project</flux:button>
+                </div>
+            </form>
         </div>
-        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-            <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
+
+        <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
+            <h2 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Your projects</h2>
+
+            <div class="mt-4 flex flex-col gap-3">
+                @forelse (auth()->user()->projects()->latest()->get() as $project)
+                    <a
+                        href="{{ $project->github_url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex items-center justify-between rounded-lg border border-neutral-200 px-4 py-3 text-sm transition hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:hover:border-neutral-600 dark:hover:bg-neutral-800/60"
+                    >
+                        <span class="font-medium text-neutral-900 dark:text-neutral-100">{{ $project->title }}</span>
+                        <span class="text-neutral-500 dark:text-neutral-400">Open</span>
+                    </a>
+                @empty
+                    <p class="text-sm text-neutral-500 dark:text-neutral-400">You have no projects yet.</p>
+                @endforelse
+            </div>
         </div>
     </div>
 </x-layouts::app>
