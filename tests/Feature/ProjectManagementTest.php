@@ -2,9 +2,16 @@
 
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
 
 test('authenticated users can add projects to their account', function () {
     $user = User::factory()->create();
+
+    Http::fake([
+        'https://api.github.com/repos/laravel/framework' => Http::response([
+            'private' => false,
+        ], 200),
+    ]);
 
     $response = $this->actingAs($user)->post(route('projects.store'), [
         'title' => 'Project Quality Checker',
@@ -18,6 +25,8 @@ test('authenticated users can add projects to their account', function () {
     expect($project)->not->toBeNull();
     expect($project?->title)->toBe('Project Quality Checker');
     expect($project?->github_url)->toBe('https://github.com/laravel/framework');
+
+    Http::assertSent(fn ($request) => $request->url() === 'https://api.github.com/repos/laravel/framework');
 });
 
 test('guests cannot add projects', function () {
@@ -32,9 +41,28 @@ test('guests cannot add projects', function () {
 test('project link must include owner and repository', function () {
     $user = User::factory()->create();
 
+    Http::fake();
+
     $response = $this->actingAs($user)->post(route('projects.store'), [
         'title' => 'Invalid Project Link',
         'github_url' => 'github.com/laravel',
+    ]);
+
+    $response->assertSessionHasErrors(['github_url']);
+    expect($user->projects()->count())->toBe(0);
+    Http::assertNothingSent();
+});
+
+test('project link must point to an existing public repository', function () {
+    $user = User::factory()->create();
+
+    Http::fake([
+        'https://api.github.com/repos/acme/missing-repository' => Http::response([], 404),
+    ]);
+
+    $response = $this->actingAs($user)->post(route('projects.store'), [
+        'title' => 'Missing Repository',
+        'github_url' => 'https://github.com/acme/missing-repository',
     ]);
 
     $response->assertSessionHasErrors(['github_url']);

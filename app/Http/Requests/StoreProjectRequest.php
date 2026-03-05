@@ -3,7 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Throwable;
 
 class StoreProjectRequest extends FormRequest
 {
@@ -24,7 +26,19 @@ class StoreProjectRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'github_url' => ['required', 'string', 'max:255', 'url:http,https', 'regex:/^https?:\/\/(www\.)?github\.com\/[^\/\s]+\/[^\/\s]+(?:\.git)?\/?$/i'],
+            'github_url' => [
+                'bail',
+                'required',
+                'string',
+                'max:255',
+                'url:http,https',
+                'regex:/^https?:\/\/(www\.)?github\.com\/[^\/\s]+\/[^\/\s]+(?:\.git)?\/?$/i',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! $this->repositoryIsPubliclyAccessible((string) $value)) {
+                        $fail('The GitHub repository does not exist or is not publicly accessible.');
+                    }
+                },
+            ],
         ];
     }
 
@@ -47,5 +61,28 @@ class StoreProjectRequest extends FormRequest
                 'github_url' => "https://{$githubUrl}",
             ]);
         }
+    }
+
+    private function repositoryIsPubliclyAccessible(string $repositoryUrl): bool
+    {
+        $path = trim((string) parse_url($repositoryUrl, PHP_URL_PATH), '/');
+        $segments = explode('/', $path);
+
+        if (count($segments) < 2) {
+            return false;
+        }
+
+        $owner = $segments[0];
+        $repository = Str::before($segments[1], '.git');
+
+        try {
+            $response = Http::acceptJson()
+                ->timeout(5)
+                ->get("https://api.github.com/repos/{$owner}/{$repository}");
+        } catch (Throwable) {
+            return false;
+        }
+
+        return $response->ok() && $response->json('private') !== true;
     }
 }
