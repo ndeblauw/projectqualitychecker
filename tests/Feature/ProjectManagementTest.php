@@ -118,6 +118,7 @@ test('user can view their own project page', function () {
     $response->assertOk();
     $response->assertSeeText('Quality Checker');
     $response->assertSee($project->github_url);
+    $response->assertSeeText('Opens in a new tab');
     $response->assertSeeText('Refresh statistics');
 });
 
