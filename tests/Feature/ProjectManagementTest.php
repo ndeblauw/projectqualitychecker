@@ -29,6 +29,18 @@ test('guests cannot add projects', function () {
     $response->assertRedirect(route('login'));
 });
 
+test('project link must include owner and repository', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post(route('projects.store'), [
+        'title' => 'Invalid Project Link',
+        'github_url' => 'github.com/laravel',
+    ]);
+
+    $response->assertSessionHasErrors(['github_url']);
+    expect($user->projects()->count())->toBe(0);
+});
+
 test('sidebar only shows projects for the logged-in user', function () {
     $user = User::factory()->create();
     $otherUser = User::factory()->create();

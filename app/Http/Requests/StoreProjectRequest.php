@@ -24,7 +24,7 @@ class StoreProjectRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'github_url' => ['required', 'string', 'max:255', 'url:http,https', 'regex:/^https?:\/\/(www\.)?github\.com\/.+$/i'],
+            'github_url' => ['required', 'string', 'max:255', 'url:http,https', 'regex:/^https?:\/\/(www\.)?github\.com\/[^\/\s]+\/[^\/\s]+(?:\.git)?\/?$/i'],
         ];
     }
 
@@ -34,7 +34,7 @@ class StoreProjectRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'github_url.regex' => 'The GitHub link must point to github.com.',
+            'github_url.regex' => 'The GitHub link must point to a GitHub repository (owner/repository).',
         ];
     }
 
