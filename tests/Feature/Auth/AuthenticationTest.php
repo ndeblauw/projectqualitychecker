@@ -7,6 +7,8 @@ test('login screen can be rendered', function () {
     $response = $this->get(route('login'));
 
     $response->assertOk();
+    $response->assertSeeText('Project Quality Checker');
+    $response->assertSee('border-sky-600');
 });
 
 test('users can authenticate using the login screen', function () {

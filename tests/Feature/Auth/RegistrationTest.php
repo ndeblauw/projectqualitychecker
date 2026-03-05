@@ -4,6 +4,8 @@ test('registration screen can be rendered', function () {
     $response = $this->get(route('register'));
 
     $response->assertOk();
+    $response->assertSeeText('Project Quality Checker');
+    $response->assertSee('border-sky-600');
 });
 
 test('new users can register', function () {
